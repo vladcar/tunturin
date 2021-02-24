@@ -67,3 +67,4 @@ terraform.tfstate
 !prospect-service/node_modules
 /.idea/
 /*/terraform/*/.terragrunt-cache/
+**aws_config.tfvars
