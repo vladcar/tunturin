@@ -6,16 +6,17 @@ locals {
 module "prospect_creator_lambda" {
   source         = "vladcar/serverless-common-basic-lambda/aws"
   function_name  = "tunturin-tg-webhook-handler-${var.env_config.env}"
-  source_path    = "todoPath/function.zip"
-  handler        = "webhookHandler"
+  source_path    = "${path.module}/function.zip"
+  handler        = "telegram-send-data-handler"
   memory_size    = 256
   runtime        = "go1.x"
   layers         = []
   create_role    = false
   execution_role = module.service_lambda_execution_role.role_arn
-  tags = var.tags
-  env_vars = {
+  tags           = var.tags
 
+  env_vars = {
+    BOT_KEY = var.telegram_bot_key
   }
 }
 
