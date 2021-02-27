@@ -8,7 +8,7 @@ module "prospect_creator_lambda" {
   function_name  = "tunturin-tg-webhook-handler-${var.env_config.env}"
   source_path    = "${path.module}/function.zip"
   handler        = "telegram-send-data-handler"
-  memory_size    = 256
+  memory_size    = 512
   runtime        = "go1.x"
   layers         = []
   create_role    = false
@@ -16,7 +16,8 @@ module "prospect_creator_lambda" {
   tags           = var.tags
 
   env_vars = {
-    BOT_KEY = var.telegram_bot_key
+    BOT_KEY       = var.telegram_bot_key
+    ALLOWED_CHATS = join(",", var.allowed_chats)
   }
 }
 

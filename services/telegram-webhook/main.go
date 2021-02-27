@@ -3,50 +3,53 @@ package telegram_webhook
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"os"
 	"strconv"
-	"tunturin/services/telegram-service"
+	"strings"
+	tg "tunturin/services/telegram-service"
 )
 
+var allowedChats map[int]struct{}
+
 func init() {
-	// initialize stuff here
-}
-
-type Chat struct {
-	Id int `json:"id"`
-}
-
-type Message struct {
-	Text string `json:"text"`
-	Chat Chat   `json:"chat"`
-}
-
-type Update struct {
-	UpdateId int     `json:"update_id"`
-	Message  Message `json:"message"`
+	chats := os.Getenv("ALLOWED_CHATS")
+	fmt.Printf("allowed chats ids: %v", chats)
+	allowedChats = make(map[int]struct{})
+	for _, s := range strings.Split(chats, ",") {
+		id, _ := strconv.Atoi(s)
+		allowedChats[id] = struct{}{}
+	}
 }
 
 func HandleWebhook(update string) error {
-	var body Update
+	var body tg.Update
 	er := json.Unmarshal([]byte(update), &body)
 	if er != nil {
 		return fmt.Errorf("json unmarshall error %v", er)
 	}
-	log.Printf("Message body %v", body.Message.Text)
-	log.Printf("Sending to chat_id: %d", body.Message.Chat.Id)
 
-	var reply string
-	if body.Message.Text == "hi" || body.Message.Text == "/hi" {
-		reply = "Hi, my name is tunturin. How are your today? 😻"
-	} else {
+	chatId := getChatId(body)
+	if notAllowed(chatId) {
 		return nil
 	}
+	var op = tg.GetOperation(body)
+	return op.Execute(body)
+}
 
-	msg := telegram_service.TelegramMessage{
-		ChatId: strconv.Itoa(body.Message.Chat.Id),
-		Body:   reply,
+func getChatId(body tg.Update) int {
+	var chatId int
+	if body.Message != nil {
+		chatId = body.Message.Chat.Id
+	} else {
+		chatId = body.CallbackQuery.Message.Chat.Id
 	}
+	return chatId
+}
 
-	_ = telegram_service.SendMessage(msg)
-	return nil
+func notAllowed(chatId int) bool {
+	_, chatAllowed := allowedChats[chatId]
+	if !chatAllowed {
+		return true
+	}
+	return false
 }

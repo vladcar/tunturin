@@ -11,6 +11,7 @@ module "webhook_handler" {
   api_gateway_id   = module.gateway.api_gateway_id
   env_config       = var.env_config
   telegram_bot_key = var.telegram_bot_key
+  allowed_chats    = var.allowed_chats
 }
 
 resource "aws_apigatewayv2_route" "route" {
